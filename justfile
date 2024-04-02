@@ -49,6 +49,7 @@ testv:
 
 ## Run the linter
 lint:
+    cargo check
     cargo clippy
 
 ## Authenticate against DigitalOcean
