@@ -6,11 +6,11 @@ install_sqlx:
 
 ## Start the database
 db-start:
-    docker compose up -d
+    docker compose up db -d
 
 ## Stop the database
 db-stop:
-    docker compose down -v
+    docker compose down db -v
 
 ## Restart the database
 db-reboot: db-stop db-start
@@ -23,6 +23,17 @@ is_db_running:
 migrate:
     sqlx database create
     sqlx migrate run
+
+## Build and run the service with docker-compose
+docker-run:
+  docker compose up --build -d
+
+## Stop the service
+docker-stop:
+  docker compose down -v
+
+## Restart the service
+docker-reboot: docker-stop docker-run
 
 ## Start the server
 run:
@@ -39,3 +50,22 @@ testv:
 ## Run the linter
 lint:
     cargo clippy
+
+## Authenticate against DigitalOcean
+deploy-auth:
+  doctl auth init
+
+## Deploy the service to DigitalOcean
+deploy-create:
+  doctl apps create --spec spec.yaml
+
+## Update the service on DigitalOcean
+deploy-update appid:
+  doctl apps update {{appid}} --spec spec.yaml
+
+## Auth and Deploy the service to DigitalOcean
+deploy: deploy-auth deploy-create
+
+## Run the migrations on DigitalOcean
+migrate-do dbconnection:
+  DATABASE_URL={{dbconnection}} sqlx migrate run

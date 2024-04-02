@@ -1,0 +1,12 @@
+.git/
+.github/
+.vscode/
+.env
+.envrc
+.gitignore
+target/
+tests/
+Dockerfile
+docker-compose.yml
+scripts/
+migrations/

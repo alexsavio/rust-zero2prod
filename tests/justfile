@@ -1,0 +1,8 @@
+## Send a request to the /health_check endpoint
+health_check:
+  curl -v 127.0.0.1:8000/health_check
+
+
+## Send a POST request to the /subscriptions endpoint
+add_subscription:
+  curl -v --request POST --data 'name=le%20guin&email=ursula_le_guin%40gmail.com' 127.0.0.1:8000/subscriptions
