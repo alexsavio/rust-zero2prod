@@ -70,3 +70,7 @@ deploy: deploy-auth deploy-create
 ## Run the migrations on DigitalOcean
 migrate-do dbconnection:
   DATABASE_URL={{dbconnection}} sqlx migrate run
+
+## Update sqlx offline mode
+sqlx-prepare:
+  cargo sqlx prepare --workspace
