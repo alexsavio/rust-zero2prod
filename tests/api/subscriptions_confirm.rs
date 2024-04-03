@@ -35,7 +35,10 @@ async fn the_link_returned_by_subscribe_returns_a_200_if_called() {
 
     assert_eq!(confirmation_links.html, confirmation_links.plain_text);
     assert_eq!(confirmation_links.html.host_str().unwrap(), "127.0.0.1");
-    assert_eq!(confirmation_links.plain_text.host_str().unwrap(), "127.0.0.1");
+    assert_eq!(
+        confirmation_links.plain_text.host_str().unwrap(),
+        "127.0.0.1"
+    );
 
     let mut confirmation_link = confirmation_links.html.clone();
     confirmation_link.set_port(Some(app.port)).unwrap();
@@ -67,7 +70,11 @@ async fn clicking_on_the_confirmation_link_confirms_a_subscriber() {
     confirmation_link.set_port(Some(app.port)).unwrap();
 
     // Act
-    reqwest::get(confirmation_link).await.unwrap().error_for_status().unwrap();
+    reqwest::get(confirmation_link)
+        .await
+        .unwrap()
+        .error_for_status()
+        .unwrap();
 
     // Assert
     let saved = sqlx::query!("SELECT email, name, status FROM subscriptions",)

@@ -47,6 +47,10 @@ test:
 testv:
   RUST_BACKTRACE=1 cargo test -- --nocapture
 
+## Format the code
+format:
+    cargo fmt
+
 ## Run the linter
 lint:
     cargo check

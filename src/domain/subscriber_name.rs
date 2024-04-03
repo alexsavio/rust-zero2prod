@@ -11,8 +11,7 @@ impl SubscriberName {
         let contains_forbidden_characters = s.chars().any(|c| forbidden_characters.contains(&c));
         if is_empty_or_whitespace || is_too_long || contains_forbidden_characters {
             Err(format!("{} is not a valid subscriber name.", s))
-        }
-        else {
+        } else {
             Ok(Self(s))
         }
     }
@@ -23,7 +22,6 @@ impl AsRef<str> for SubscriberName {
         &self.0
     }
 }
-
 
 #[cfg(test)]
 mod tests {

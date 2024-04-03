@@ -1,7 +1,6 @@
-use zero2prod::startup::Application;
 use zero2prod::configuration::get_configuration;
+use zero2prod::startup::Application;
 use zero2prod::telemetry::{get_subscriber, init_subscriber};
-
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
@@ -15,4 +14,3 @@ async fn main() -> Result<(), std::io::Error> {
     server.run_until_stopped().await?;
     Ok(())
 }
-

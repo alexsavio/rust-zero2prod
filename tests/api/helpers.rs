@@ -1,10 +1,10 @@
 use once_cell::sync::Lazy;
-use sqlx::{Connection, Executor, PgConnection, PgPool};
 use sqlx::postgres::PgPoolOptions;
+use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
 use wiremock::MockServer;
-use zero2prod::configuration::{DatabaseSettings, get_configuration};
-use zero2prod::startup::{Application, get_connection_pool};
+use zero2prod::configuration::{get_configuration, DatabaseSettings};
+use zero2prod::startup::{get_connection_pool, Application};
 use zero2prod::telemetry::{get_subscriber, init_subscriber};
 
 pub struct TestApp {
@@ -91,7 +91,9 @@ pub async fn spawn_app() -> TestApp {
     configure_database(&configuration.database).await;
 
     // Launch the application as a background task
-    let application = Application::build(configuration.clone()).await.expect("Failed to build application.");
+    let application = Application::build(configuration.clone())
+        .await
+        .expect("Failed to build application.");
     let application_port = application.port();
     let address = format!("http://localhost:{}", application_port);
     let _ = tokio::spawn(application.run_until_stopped());
@@ -105,10 +107,9 @@ pub async fn spawn_app() -> TestApp {
 
 async fn configure_database(config: &DatabaseSettings) -> PgPool {
     // Create database
-    let mut connection =
-        PgConnection::connect_with(&config.without_db())
-            .await
-            .expect("Failed to connect to Postgres");
+    let mut connection = PgConnection::connect_with(&config.without_db())
+        .await
+        .expect("Failed to connect to Postgres");
     connection
         .execute(&*format!(r#"CREATE DATABASE "{}";"#, config.name))
         .await

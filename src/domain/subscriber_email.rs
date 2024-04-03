@@ -7,8 +7,7 @@ impl SubscriberEmail {
     pub fn parse(s: String) -> Result<SubscriberEmail, String> {
         if validate_email(&s) {
             Ok(Self(s))
-        }
-        else {
+        } else {
             Err(format!("{} is not a valid email address.", s))
         }
     }
@@ -22,11 +21,11 @@ impl AsRef<str> for SubscriberEmail {
 
 #[cfg(test)]
 mod tests {
+    use crate::domain::SubscriberEmail;
+    use claims::assert_err;
     use fake::faker::internet::en::SafeEmail;
     use fake::Fake;
     use rand::{rngs::StdRng, SeedableRng};
-    use claims::assert_err;
-    use crate::domain::SubscriberEmail;
 
     #[test]
     fn empty_string_is_rejected() {

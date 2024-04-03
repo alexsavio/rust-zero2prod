@@ -19,15 +19,12 @@ pub async fn confirm(parameters: web::Query<Parameters>, pool: web::Data<PgPool>
                 return HttpResponse::InternalServerError().finish();
             }
             HttpResponse::Ok().finish()
-        },
+        }
         None => return HttpResponse::Unauthorized().finish(),
     }
 }
 
-pub async fn confirm_subscriber(
-    pool: &PgPool,
-    subscriber_id: Uuid,
-) -> Result<(), sqlx::Error> {
+pub async fn confirm_subscriber(pool: &PgPool, subscriber_id: Uuid) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r#"
         UPDATE subscriptions

@@ -1,9 +1,8 @@
 use secrecy::{ExposeSecret, Secret};
-use sqlx::postgres::{PgConnectOptions, PgSslMode};
 use serde_aux::field_attributes::deserialize_number_from_string;
+use sqlx::postgres::{PgConnectOptions, PgSslMode};
 
 use crate::domain::SubscriberEmail;
-
 
 #[derive(Clone, serde::Deserialize)]
 pub struct Settings {
@@ -49,13 +48,17 @@ pub fn get_configuration() -> Result<Settings, config::ConfigError> {
         .expect("Failed to parse APP_ENVIRONMENT");
     let environment_filename = format!("{}.yaml", environment.as_str());
     let settings = config::Config::builder()
+        .add_source(config::File::from(
+            configuration_directory.join("base.yaml"),
+        ))
+        .add_source(config::File::from(
+            configuration_directory.join(environment_filename),
+        ))
         .add_source(
-            config::File::from(configuration_directory.join("base.yaml"))
+            config::Environment::with_prefix("APP")
+                .separator("__")
+                .prefix_separator("_"),
         )
-        .add_source(
-            config::File::from(configuration_directory.join(environment_filename))
-        )
-        .add_source(config::Environment::with_prefix("APP").separator("__").prefix_separator("_"))
         .build()?;
     // Try to convert the configuration reader into our Settings type
     settings.try_deserialize::<Settings>()
