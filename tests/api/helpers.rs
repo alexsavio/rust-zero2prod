@@ -2,6 +2,7 @@ use once_cell::sync::Lazy;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use sqlx::postgres::PgPoolOptions;
 use uuid::Uuid;
+use wiremock::MockServer;
 use zero2prod::configuration::{DatabaseSettings, get_configuration};
 use zero2prod::startup::{Application, get_connection_pool};
 use zero2prod::telemetry::{get_subscriber, init_subscriber};
@@ -9,6 +10,7 @@ use zero2prod::telemetry::{get_subscriber, init_subscriber};
 pub struct TestApp {
     pub address: String,
     pub db_pool: PgPool,
+    pub email_server: MockServer,
 }
 
 impl TestApp {
@@ -41,12 +43,16 @@ pub async fn spawn_app() -> TestApp {
     // All other invocations will instead skip execution.
     Lazy::force(&TRACING);
 
+    let email_server = MockServer::start().await;
+
     let configuration = {
         let mut c = get_configuration().expect("Failed to read configuration.");
         // Use a different database for each test case
         c.database.name = Uuid::new_v4().to_string();
         // Use a random OS-assigned port
         c.application.port = 0;
+        // Point the email client to the mock server
+        c.email_client.base_url = email_server.uri();
         c
     };
 
@@ -55,11 +61,13 @@ pub async fn spawn_app() -> TestApp {
 
     // Launch the application as a background task
     let application = Application::build(configuration.clone()).await.expect("Failed to build application.");
-    let address = format!("http://localhost:{}", application.port());
+    let application_port = application.port();
+    let address = format!("http://localhost:{}", application_port);
     let _ = tokio::spawn(application.run_until_stopped());
     TestApp {
         address,
         db_pool: get_connection_pool(&configuration.database),
+        email_server,
     }
 }
 

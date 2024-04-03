@@ -33,7 +33,11 @@ impl Application {
         );
         let listener = TcpListener::bind(address)?;
         let port = listener.local_addr().unwrap().port();
-        let server = run(listener, connection_pool, email_client)?;
+        let server = run(
+            listener,
+            connection_pool,
+            email_client,
+        )?;
         Ok(Self { port, server })
     }
 
@@ -72,6 +76,8 @@ pub async fn build(configuration: Settings) -> Result<Server, std::io::Error> {
 pub fn get_connection_pool(config: &DatabaseSettings) -> PgPool {
     PgPoolOptions::new().connect_lazy_with(config.with_db())
 }
+
+pub struct ApplicationBaseUrl(pub String);
 
 fn run(
     listener: TcpListener,
