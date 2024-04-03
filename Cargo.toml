@@ -13,20 +13,21 @@ path = "src/main.rs"
 
 [dependencies]
 actix-web = "4"
-chrono = { version = "0.4.33", default-features = false, features = ["clock"] }
-config = "0.14.0"
-serde = { version = "1.0.196", features = ["derive"] }
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+config = "0.14"
+serde = { version = "1.0", features = ["derive"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "rt"] }
-uuid = { version = "1.7.0", features = ["v4"] }
+uuid = { version = "1.7", features = ["v4"] }
 secrecy = { version = "0.8", features = ["serde"] }
 tracing = { version = "0.1.40", features = ["log"] }
-tracing-log = "0.2.0"
+tracing-log = "0.2"
 tracing-actix-web = "0.7"
 tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
 tracing-bunyan-formatter = "0.3"
-serde-aux = "4.5.0"
-unicode-segmentation = "1.11.0"
+serde-aux = "4.5"
+unicode-segmentation = "1.11"
 validator = "0.16.0"
+rand = { version = "0.8", features = ["std_rng"] }
 
 [dependencies.reqwest]
 version = "0.12"
@@ -48,10 +49,10 @@ features = [
 [dev-dependencies]
 once_cell = "1"
 claims = "0.7"
-fake = "2.9.2"
-quickcheck = "1.0.3"
-quickcheck_macros = "1.0.0"
-rand = "0.8.5"
-wiremock = "0.6.0"
-serde_json = "1.0.115"
-linkify = "0.10.0"
+fake = "2.9"
+quickcheck = "1.0"
+quickcheck_macros = "1.0"
+rand = "0.8"
+wiremock = "0.6"
+serde_json = "1.0"
+linkify = "0.10"

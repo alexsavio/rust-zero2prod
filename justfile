@@ -64,6 +64,10 @@ deploy-create:
 deploy-update appid:
   doctl apps update {{appid}} --spec spec.yaml
 
+## List the apps on DigitalOcean
+do-list-apps:
+  doctl apps list --format ID
+
 ## Auth and Deploy the service to DigitalOcean
 deploy: deploy-auth deploy-create
 
