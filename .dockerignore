@@ -4,9 +4,12 @@
 .env
 .envrc
 .gitignore
+.dockerignore
 target/
+deploy/
 tests/
 Dockerfile
 docker-compose.yml
 scripts/
 migrations/
+spec.yaml
