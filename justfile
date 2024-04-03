@@ -20,7 +20,7 @@ is_db_running:
     docker compose ps | grep -q 'Up'
 
 ## Run the database migrations
-migrate:
+migrate: db-start
     sqlx database create
     sqlx migrate run
 
