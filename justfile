@@ -74,3 +74,8 @@ migrate-do dbconnection:
 ## Update sqlx offline mode
 sqlx-prepare:
   cargo sqlx prepare --workspace
+
+## MacOS - fix ulimit
+# https://github.com/WeareJH/config-gen/issues/44
+fix-ulimit:
+  ulimit -n 2048
