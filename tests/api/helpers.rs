@@ -55,7 +55,7 @@ pub async fn spawn_app() -> TestApp {
 
     // Launch the application as a background task
     let application = Application::build(configuration.clone()).await.expect("Failed to build application.");
-    let address = format!("http://127.0.0.1:{}", application.port());
+    let address = format!("http://localhost:{}", application.port());
     let _ = tokio::spawn(application.run_until_stopped());
     TestApp {
         address,
