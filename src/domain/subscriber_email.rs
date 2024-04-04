@@ -1,21 +1,27 @@
-use validator::validate_email;
+use validator::Validate;
 
-#[derive(Debug)]
-pub struct SubscriberEmail(String);
+#[derive(Debug, Validate)]
+pub struct SubscriberEmail {
+    #[validate(email)]
+    email: String,
+}
 
 impl SubscriberEmail {
     pub fn parse(s: String) -> Result<SubscriberEmail, String> {
-        if validate_email(&s) {
-            Ok(Self(s))
-        } else {
-            Err(format!("{} is not a valid email address.", s))
+        let potential_email = SubscriberEmail { email: s.clone() };
+        match potential_email.validate() {
+            Ok(_) => Ok(potential_email),
+            Err(e) => Err(format!(
+                "{} is not a valid email address. Error: {:?}",
+                s, e
+            )),
         }
     }
 }
 
 impl AsRef<str> for SubscriberEmail {
     fn as_ref(&self) -> &str {
-        &self.0
+        &self.email
     }
 }
 
