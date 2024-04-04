@@ -43,9 +43,12 @@ run:
 test:
   RUST_BACKTRACE=1 cargo test
 
-## Run the tests with verbose output
-testv:
-  RUST_BACKTRACE=1 cargo test -- --nocapture
+## Run the tests with verbose and colored output
+testv testset:
+  RUST_LOG="sqlx=error,info" \
+  TEST_LOG=true \
+  RUST_BACKTRACE=1 \
+  cargo test {{testset}} -- --nocapture | bunyan
 
 ## Format the code
 format:
