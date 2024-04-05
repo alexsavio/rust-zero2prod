@@ -30,24 +30,25 @@ impl TryFrom<FormData> for NewSubscriber {
 }
 
 #[derive(thiserror::Error)]
-pub enum SubscribeError {
+/// Subscription errors.
+pub enum SubscriptionError {
     #[error("{0}")]
     ValidationError(String),
     #[error(transparent)]
     UnexpectedError(#[from] anyhow::Error),
 }
 
-impl std::fmt::Debug for SubscribeError {
+impl std::fmt::Debug for SubscriptionError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         error_chain_fmt(self, f)
     }
 }
 
-impl ResponseError for SubscribeError {
+impl ResponseError for SubscriptionError {
     fn status_code(&self) -> StatusCode {
         match self {
-            SubscribeError::ValidationError(_) => StatusCode::BAD_REQUEST,
-            SubscribeError::UnexpectedError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            SubscriptionError::ValidationError(_) => StatusCode::BAD_REQUEST,
+            SubscriptionError::UnexpectedError(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }
@@ -75,8 +76,8 @@ pub async fn subscribe(
     pool: web::Data<PgPool>,
     email_client: web::Data<EmailClient>,
     base_url: web::Data<ApplicationBaseUrl>,
-) -> Result<HttpResponse, SubscribeError> {
-    let new_subscriber = form.0.try_into().map_err(SubscribeError::ValidationError)?;
+) -> Result<HttpResponse, SubscriptionError> {
+    let new_subscriber = form.0.try_into().map_err(SubscriptionError::ValidationError)?;
     let mut transaction = pool
         .begin()
         .await

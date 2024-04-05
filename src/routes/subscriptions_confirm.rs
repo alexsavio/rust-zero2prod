@@ -11,6 +11,7 @@ pub struct Parameters {
 }
 
 #[derive(thiserror::Error)]
+/// Subscription confirmation errors.
 pub enum ConfirmationError {
     #[error(transparent)]
     UnexpectedError(#[from] anyhow::Error),
