@@ -1,3 +1,4 @@
+use tokio::task::JoinHandle;
 use tracing::subscriber::set_global_default;
 use tracing::Subscriber;
 use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
@@ -31,4 +32,17 @@ where
 pub fn init_subscriber(subscriber: impl Subscriber + Send + Sync) {
     LogTracer::init().expect("Failed to set logger.");
     set_global_default(subscriber).expect("Failed to set subscriber.");
+}
+
+/// Spawn a task on the blocking thread pool with tracing enabled.
+/// This function is similar to `tokio::task::spawn_blocking`, but it ensures that the
+/// current tracing span is in scope when the blocking operation is executed.
+/// Has the same trait and signature as `tokio::task::spawn_blocking`.
+pub fn spawn_blocking_with_tracing<F, T>(f: F) -> JoinHandle<T>
+where
+    F: FnOnce() -> T + Send + 'static,
+    T: Send + 'static,
+{
+    let current_span = tracing::Span::current();
+    tokio::task::spawn_blocking(move || current_span.in_scope(|| f()))
 }

@@ -28,8 +28,10 @@ serde-aux = "4.5"
 unicode-segmentation = "1.11"
 validator = { version = "0.17", features = ["derive"] }
 rand = { version = "0.8", features = ["std_rng"] }
-thiserror = "1.0.58"
-anyhow = "1.0.81"
+thiserror = "1.0"
+anyhow = "1.0"
+actix-web-lab = "0.20"
+argon2 = { version = "0.5", features = ["std"] }
 
 [dependencies.reqwest]
 version = "0.12"
