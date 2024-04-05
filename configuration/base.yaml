@@ -9,7 +9,7 @@ database:
   name: newsletter
   require_ssl: false
 email_client:
-  base_url: localhost
+  base_url: http://localhost
   sender_email: test@example.com
   authorization_token: "my-secret-token"
   timeout_milliseconds: 10000
