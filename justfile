@@ -40,11 +40,11 @@ run:
     cargo run
 
 ## Run the tests
-test:
-  RUST_BACKTRACE=1 cargo test
+test testset="":
+  RUST_BACKTRACE=1 cargo test {{testset}}
 
 ## Run the tests with verbose and colored output
-testv testset:
+testv testset="":
   RUST_LOG="sqlx=error,info" \
   TEST_LOG=true \
   RUST_BACKTRACE=1 \
