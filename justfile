@@ -39,12 +39,16 @@ docker-reboot: docker-stop docker-run
 run:
     cargo run
 
-## Run the tests
+## Run the tests quietly
 test testset="":
+  cargo test {{testset}}
+
+## Run the tests showing stacktraces
+testv testset="":
   RUST_BACKTRACE=1 cargo test {{testset}}
 
 ## Run the tests with verbose and colored output
-testv testset="":
+testvv testset="":
   RUST_LOG="sqlx=error,info" \
   TEST_LOG=true \
   RUST_BACKTRACE=1 \
