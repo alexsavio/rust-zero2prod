@@ -4,6 +4,8 @@ Check the Justfile for the commands to run the project.
 
 ## TODO:
 
+- [ ] Subscription confirmation should not be a GET request, but a POST request: https://github.com/LukeMathWalker/zero-to-production/issues/187. At the moment, the API has a POST request to avoid extending the issue, however the confirmation email link would not work as it is a GET request. This should be fixed.
+
 ### Section 7
 
 - [ ] What happens if a user tries to subscribe twice? Make sure that they receive two confirmation emails;

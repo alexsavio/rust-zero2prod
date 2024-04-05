@@ -46,7 +46,7 @@ impl TestApp {
             let mut confirmation_link = reqwest::Url::parse(&raw_link).unwrap();
             // Let's make sure we don't call random APIs on the web
             assert_eq!(confirmation_link.host_str().unwrap(), "127.0.0.1");
-            confirmation_link.set_port(Some(8000)).unwrap();
+            confirmation_link.set_port(Some(self.port)).unwrap();
             confirmation_link
         };
 

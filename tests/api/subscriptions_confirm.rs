@@ -9,7 +9,10 @@ async fn confirmations_without_token_are_rejected_with_a_400() {
     let app = spawn_app().await;
 
     // Act
-    let response = reqwest::get(&format!("{}/subscriptions/confirm", &app.address))
+    let client = reqwest::Client::new();
+    let response = client
+        .post(&format!("{}/subscriptions/confirm", &app.address))
+        .send()
         .await
         .unwrap();
 
@@ -40,11 +43,11 @@ async fn the_link_returned_by_subscribe_returns_a_200_if_called() {
         "127.0.0.1"
     );
 
-    let mut confirmation_link = confirmation_links.html.clone();
-    confirmation_link.set_port(Some(app.port)).unwrap();
+    let confirmation_link = confirmation_links.html.clone();
 
     // Act
-    let response = reqwest::get(confirmation_link).await.unwrap();
+    let client = reqwest::Client::new();
+    let response = client.post(confirmation_link).send().await.unwrap();
 
     // Assert
     assert_eq!(response.status().as_u16(), 200);
@@ -66,11 +69,13 @@ async fn clicking_on_the_confirmation_link_confirms_a_subscriber() {
     let email_request = &app.email_server.received_requests().await.unwrap()[0];
     let confirmation_links = app.get_confirmation_links(email_request);
 
-    let mut confirmation_link = confirmation_links.html.clone();
-    confirmation_link.set_port(Some(app.port)).unwrap();
+    let confirmation_link = confirmation_links.html.clone();
 
     // Act
-    reqwest::get(confirmation_link)
+    let client = reqwest::Client::new();
+    client
+        .post(confirmation_link)
+        .send()
         .await
         .unwrap()
         .error_for_status()
