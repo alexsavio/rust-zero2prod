@@ -25,6 +25,12 @@ impl AsRef<str> for SubscriberEmail {
     }
 }
 
+impl std::fmt::Display for SubscriberEmail {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.email.fmt(f)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::domain::SubscriberEmail;
