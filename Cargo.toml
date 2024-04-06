@@ -26,17 +26,19 @@ tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
 tracing-bunyan-formatter = "0.3"
 serde-aux = "4.5"
 unicode-segmentation = "1.11"
-validator = { version = "0.17", features = ["derive"] }
+validator = { version = "0.18", features = ["derive"] }
 rand = { version = "0.8", features = ["std_rng"] }
 thiserror = "1.0"
 anyhow = "1.0"
 actix-web-lab = "0.20"
 argon2 = { version = "0.5", features = ["std"] }
+urlencoding = "2"
+htmlescape = "0.3.1"
 
 [dependencies.reqwest]
 version = "0.12"
 default-features = false
-features = ["json", "rustls-tls"]
+features = ["json", "rustls-tls", "cookies"]
 
 [dependencies.sqlx]
 version = "0.7"

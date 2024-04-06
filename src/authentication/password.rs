@@ -1,8 +1,9 @@
+use crate::telemetry::spawn_blocking_with_tracing;
+use anyhow::Context;
 use argon2::password_hash::SaltString;
 use argon2::{Algorithm, Argon2, Params, PasswordHash, PasswordHasher, PasswordVerifier, Version};
-use secrecy::Secret;
+use secrecy::{ExposeSecret, Secret};
 use sqlx::PgPool;
-use crate::telemetry::{spawn_blocking_with_tracing};
 
 pub struct Credentials {
     pub username: String,
@@ -38,10 +39,10 @@ async fn get_stored_credentials(
 }
 
 #[tracing::instrument(name = "Validating credentials", skip(credentials, pool))]
-async fn validate_credentials(
+pub async fn validate_credentials(
     credentials: Credentials,
     pool: &PgPool,
-) -> Result<uuid: Uuid, AuthError> {
+) -> Result<uuid::Uuid, AuthError> {
     // we use these random values to simulate a real authentication flow
     // to avoid timing attacks
     let mut user_id = None;
@@ -71,21 +72,57 @@ async fn validate_credentials(
 }
 
 #[tracing::instrument(
-    name = "Verifying password hash",
+    name = "Validate credentials",
     skip(expected_password_hash, password_candidate)
 )]
 fn verify_password_hash(
     expected_password_hash: Secret<String>,
     password_candidate: Secret<String>,
 ) -> Result<(), AuthError> {
-    let expected_password_hash = PasswordHash::new(&expected_password_hash.expose_secret())
-    .context("Failed to parse hash in PHC format.")
-    .map_err(AuthError::UnexpectedError)?;
+    let expected_password_hash = PasswordHash::new(expected_password_hash.expose_secret())
+        .context("Failed to parse hash in PHC string format.")?;
 
-    Argon2::default().verify_password(
-        credentials.password.expose_secret().as_bytes(),
-        &expected_password_hash,
+    Argon2::default()
+        .verify_password(
+            password_candidate.expose_secret().as_bytes(),
+            &expected_password_hash,
+        )
+        .context("Invalid password.")
+        .map_err(AuthError::InvalidCredentials)
+}
+
+#[tracing::instrument(name = "Change password", skip(password, pool))]
+pub async fn change_password(
+    user_id: uuid::Uuid,
+    password: Secret<String>,
+    pool: &PgPool,
+) -> Result<(), anyhow::Error> {
+    let password_hash = spawn_blocking_with_tracing(move || compute_password_hash(password))
+        .await?
+        .context("Failed to hash password")?;
+    sqlx::query!(
+        r#"
+        UPDATE users
+        SET password_hash = $1
+        WHERE user_id = $2
+        "#,
+        password_hash.expose_secret(),
+        user_id
     )
-    .context("Invalid password.")
-    .map_err(AuthError::InvalidCredentials)
+    .execute(pool)
+    .await
+    .context("Failed to change user's password in the database.")?;
+    Ok(())
+}
+
+fn compute_password_hash(password: Secret<String>) -> Result<Secret<String>, anyhow::Error> {
+    let salt = SaltString::generate(&mut rand::thread_rng());
+    let password_hash = Argon2::new(
+        Algorithm::Argon2id,
+        Version::V0x13,
+        Params::new(15000, 2, 1, None).unwrap(),
+    )
+    .hash_password(password.expose_secret().as_bytes(), &salt)?
+    .to_string();
+    Ok(Secret::new(password_hash))
 }
