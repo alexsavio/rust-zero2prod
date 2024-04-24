@@ -17,7 +17,7 @@ chrono = { version = "0.4", default-features = false, features = ["clock"] }
 config = "0.14"
 serde = { version = "1.0", features = ["derive"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "rt"] }
-uuid = { version = "1.7", features = ["v4"] }
+uuid = { version = "1.7", features = ["v4", "serde"] }
 secrecy = { version = "0.8", features = ["serde"] }
 tracing = { version = "0.1.40", features = ["log"] }
 tracing-log = "0.2"
@@ -34,6 +34,9 @@ actix-web-lab = "0.20"
 argon2 = { version = "0.5", features = ["std"] }
 urlencoding = "2"
 htmlescape = "0.3.1"
+actix-web-flash-messages = { version = "0.4", features = ["cookies"] }
+actix-session = { version = "0.9", features = ["redis-rs-tls-session"] }
+serde_json = "1.0"
 
 [dependencies.reqwest]
 version = "0.12"

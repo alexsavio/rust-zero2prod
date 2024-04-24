@@ -22,7 +22,7 @@ services:
     image: postgres:16.1-alpine
     command: -N 1000
     ports:
-      - ${DB_PORT}:5432
+      - ${DB_PORT:-5432}:5432
     volumes:
       - postgres:/data/postgres
     environment:
@@ -36,5 +36,21 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    restart: always
+    container_name: z2p-redis
+    image: redis:7-alpine
+    ports:
+      - ${REDIS_PORT:-6379}:6379
+    volumes:
+      - redis:/data/redis
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres:
+  redis:

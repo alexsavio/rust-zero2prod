@@ -15,6 +15,17 @@ Check the Justfile for the commands to run the project.
 - [ ] Use a proper templating solution for our emails (e.g. tera);
 - [ ] Anything that comes to your mind!
 
+### Section 10
+- [ ] OWASP’s provides a minimum set of requirements when it comes to password strength - passwords should be longer than 12 characters but shorter than 129 characters.
+Add these validation checks to our POST /admin/password endpoint.
+- [X] Add a "Send a newsletter issue" link to the admin dashboard
+- [ ] Add an HTML form at GET /admin/newsletters to submit a new issue;
+- [ ] Adapt POST /newsletters to process the form data:
+    - Change the route to POST /admin/newsletters;
+    - Migrate from ‘Basic’ to session-based authentication;
+    - Use the Form extractor (application/x-www-form-urlencoded) instead of the Json extractor (application/json) to handle the request body
+    - Adapt the tests
+- [ ] OAuth
 
 ## Troubleshooting
 

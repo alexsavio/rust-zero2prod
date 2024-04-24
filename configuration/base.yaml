@@ -1,6 +1,7 @@
 application:
   port: 8000
   host: 0.0.0.0
+  hmac_secret_key: "super-long-and-secret-random-key-needed-to-verify-message-integrity"
 database:
   host: localhost
   port: 5432
@@ -13,3 +14,4 @@ email_client:
   sender_email: test@example.com
   authorization_token: "my-secret-token"
   timeout_milliseconds: 10000
+redis_uri: redis://127.0.0.1:6379
