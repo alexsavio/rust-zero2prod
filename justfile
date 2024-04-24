@@ -2,27 +2,41 @@ set export
 
 ## Install the SQLx CLI to run the migrations
 install_sqlx:
-    cargo install sqlx-cli --version="~0.7" --no-default-features --features postgres,rustls
+  cargo install sqlx-cli --version="~0.7" --no-default-features --features postgres,rustls
 
-## Start the database
-db-start:
-    docker compose up db -d
+## Start the given service
+start service="":
+  docker compose up {{service}} -d
 
-## Stop the database
-db-stop:
-    docker compose down db -v
+## Stop the given service
+stop service="":
+  docker compose down {{service}} -v
+
+## Restart the service
+reboot service="":
+  just stop {{service}}
+  just start {{service}}
 
 ## Restart the database
-db-reboot: db-stop db-start
+reboot-db:
+  just reboot db
 
-## Check if the database is running
-is_db_running:
-    docker compose ps | grep -q 'Up'
+## Restart redis
+reboot-redis:
+  just reboot redis
+
+## Start dependencies
+start-deps: migrate
+  just start redis
+
+_migrate:
+  sqlx database create
+  sqlx migrate run
 
 ## Run the database migrations
-migrate: db-start
-    sqlx database create
-    sqlx migrate run
+migrate:
+  just start db
+  just _migrate
 
 ## Build and run the service with docker-compose
 docker-run:
@@ -37,7 +51,7 @@ docker-reboot: docker-stop docker-run
 
 ## Start the server
 run:
-    cargo run
+  cargo run
 
 ## Run the tests quietly
 test testset="":
@@ -56,12 +70,12 @@ testvv testset="":
 
 ## Format the code
 format:
-    cargo fmt
+  cargo fmt
 
 ## Run the linter
 lint:
-    cargo check
-    cargo clippy
+  cargo check
+  cargo clippy
 
 ## Authenticate against DigitalOcean
 deploy-auth:
