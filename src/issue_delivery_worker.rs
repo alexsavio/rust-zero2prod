@@ -1,7 +1,9 @@
 use crate::domain::SubscriberEmail;
 use crate::email_client::EmailClient;
 use crate::{configuration::Settings, startup::get_connection_pool};
+use exponential_backoff::Backoff;
 use sqlx::{Executor, PgPool, Postgres, Transaction};
+use std::ops::Add;
 use std::time::Duration;
 use tracing::{field::display, Span};
 use uuid::Uuid;
@@ -34,16 +36,30 @@ async fn get_issue(pool: &PgPool, issue_id: Uuid) -> Result<NewsletterIssue, any
     Ok(issue)
 }
 
+fn get_backoff() -> Backoff {
+    let retries = 8;
+    let min = Duration::from_secs(1);
+    let max = Duration::from_secs(60);
+    let mut backoff = Backoff::new(retries, min, max);
+    backoff.set_jitter(0.25);
+    backoff
+}
+
 async fn worker_loop(pool: PgPool, email_client: EmailClient) -> Result<(), anyhow::Error> {
+    let backoff = get_backoff();
     loop {
-        match try_execute_task(&pool, &email_client).await {
-            Ok(ExecutionOutcome::EmptyQueue) => {
-                tokio::time::sleep(Duration::from_secs(10)).await;
+        for duration in &backoff {
+            match try_execute_task(&pool, &email_client).await {
+                Ok(ExecutionOutcome::EmptyQueue) => {
+                    tokio::time::sleep(duration.add(Duration::from_secs(10))).await;
+                }
+                Err(_) => {
+                    tokio::time::sleep(duration).await;
+                }
+                Ok(ExecutionOutcome::TaskCompleted) => {
+                    break;
+                }
             }
-            Err(_) => {
-                tokio::time::sleep(Duration::from_secs(1)).await;
-            }
-            Ok(ExecutionOutcome::TaskCompleted) => {}
         }
     }
 }

@@ -29,7 +29,7 @@ Add these validation checks to our POST /admin/password endpoint.
 
 ### Section 11
 - [ ] There is no retry if the email delivery attempt fails. We could enhance this by adding a `n_retries` and `execute_after` columns to keep track of how many attemps have already taken place and when the next attempt should be executed.
-- [ ] Add an exponential backoff with jitter in the `issue_delivery_worker::worker_loop` function.
+- [X] Add an exponential backoff with jitter in the `issue_delivery_worker::worker_loop` function.
 - [ ] Add an expiry mechanism for the idempotency keys using background workers as reference.
 
 ## Troubleshooting
