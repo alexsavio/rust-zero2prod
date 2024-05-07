@@ -1,5 +1,9 @@
 set export
 
+## clean the project
+clean:
+  cargo clean
+
 ## Install the SQLx CLI to run the migrations
 install_sqlx:
   cargo install sqlx-cli --version="~0.7" --no-default-features --features postgres,rustls
@@ -65,7 +69,7 @@ testv testset="":
 testvv testset="":
   RUST_LOG="sqlx=error,info" \
   TEST_LOG=true \
-  RUST_BACKTRACE=1 \
+  RUST_BACKTRACE=full \
   cargo test {{testset}} -- --nocapture | bunyan
 
 ## Format the code
