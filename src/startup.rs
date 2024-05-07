@@ -27,17 +27,7 @@ pub struct Application {
 impl Application {
     pub async fn build(configuration: Settings) -> Result<Self, anyhow::Error> {
         let connection_pool = get_connection_pool(&configuration.database);
-        let sender_email = configuration
-            .email_client
-            .sender()
-            .expect("Invalid sender email address.");
-        let timeout = configuration.email_client.timeout();
-        let email_client = EmailClient::new(
-            configuration.email_client.base_url,
-            sender_email,
-            configuration.email_client.authorization_token,
-            timeout,
-        );
+        let email_client = configuration.email_client.client();
         let address = format!(
             "{}:{}",
             configuration.application.host, configuration.application.port,
@@ -112,7 +102,8 @@ async fn run(
             .route("/login", web::post().to(login))
             .route("/health_check", web::get().to(health_check))
             .route("/subscriptions", web::post().to(subscribe))
-            .route("/subscriptions/confirm", web::post().to(confirm))
+            // Should be a POST request (because it changes the state of the DB), however, from an email click it's a GET request.
+            .route("/subscriptions/confirm", web::get().to(confirm))
             .app_data(db_pool.clone())
             .app_data(email_client.clone())
             .app_data(base_url.clone())

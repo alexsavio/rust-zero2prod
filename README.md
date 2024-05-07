@@ -4,7 +4,7 @@ Check the Justfile for the commands to run the project.
 
 ## TODO:
 
-- [ ] Subscription confirmation should not be a GET request, but a POST request: https://github.com/LukeMathWalker/zero-to-production/issues/187. At the moment, the API has a POST request to avoid extending the issue, however the confirmation email link would not work as it is a GET request. This should be fixed.
+- [ ] Subscription confirmation should not be a GET request, but a POST request: https://github.com/LukeMathWalker/zero-to-production/issues/187.
 
 ### Section 7
 
@@ -26,6 +26,11 @@ Add these validation checks to our POST /admin/password endpoint.
     - Use the Form extractor (application/x-www-form-urlencoded) instead of the Json extractor (application/json) to handle the request body
     - Adapt the tests
 - [ ] OAuth
+
+### Section 11
+- [ ] There is no retry if the email delivery attempt fails. We could enhance this by adding a `n_retries` and `execute_after` columns to keep track of how many attemps have already taken place and when the next attempt should be executed.
+- [ ] Add an exponential backoff with jitter in the `issue_delivery_worker::worker_loop` function.
+- [ ] Add an expiry mechanism for the idempotency keys using background workers as reference.
 
 ## Troubleshooting
 

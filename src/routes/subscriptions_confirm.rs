@@ -49,35 +49,25 @@ pub async fn confirm(
     Ok(HttpResponse::Ok().finish())
 }
 
+#[tracing::instrument(name = "Mark subscriber as confirmed", skip(subscriber_id, pool))]
 pub async fn confirm_subscriber(pool: &PgPool, subscriber_id: Uuid) -> Result<(), sqlx::Error> {
     sqlx::query!(
-        r#"
-        UPDATE subscriptions
-        SET status = 'confirmed'
-        WHERE id = $1
-        "#,
-        subscriber_id
+        r#"UPDATE subscriptions SET status = 'confirmed' WHERE id = $1"#,
+        subscriber_id,
     )
     .execute(pool)
     .await?;
     Ok(())
 }
 
-#[tracing::instrument(
-    name = "Fetch a subscriber_id given a subscription_token.",
-    skip(subscription_token, pool)
-)]
+#[tracing::instrument(name = "Get subscriber_id from token", skip(subscription_token, pool))]
 pub async fn get_subscriber_id_from_token(
     pool: &PgPool,
     subscription_token: &str,
 ) -> Result<Option<Uuid>, sqlx::Error> {
     let result = sqlx::query!(
-        r#"
-        SELECT subscriber_id
-        FROM subscription_tokens
-        WHERE subscription_token = $1
-        "#,
-        subscription_token
+        r#"SELECT subscriber_id FROM subscription_tokens WHERE subscription_token = $1"#,
+        subscription_token,
     )
     .fetch_optional(pool)
     .await?;

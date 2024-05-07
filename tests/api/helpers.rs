@@ -6,6 +6,8 @@ use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
 use wiremock::MockServer;
 use zero2prod::configuration::{get_configuration, DatabaseSettings};
+use zero2prod::email_client::EmailClient;
+use zero2prod::issue_delivery_worker::{try_execute_task, ExecutionOutcome};
 use zero2prod::startup::{get_connection_pool, Application};
 use zero2prod::telemetry::{get_subscriber, init_subscriber};
 
@@ -16,6 +18,7 @@ pub struct TestApp {
     pub email_server: MockServer,
     pub test_user: TestUser,
     pub api_client: reqwest::Client,
+    pub email_client: EmailClient,
 }
 
 /// Confirmation links embedded in the request to the email API.
@@ -25,6 +28,18 @@ pub struct ConfirmationLinks {
 }
 
 impl TestApp {
+    pub async fn dispatch_all_pending_emails(&self) {
+        loop {
+            if let ExecutionOutcome::EmptyQueue =
+                try_execute_task(&self.db_pool, &self.email_client)
+                    .await
+                    .unwrap()
+            {
+                break;
+            }
+        }
+    }
+
     pub async fn post_subscriptions(&self, body: String) -> reqwest::Response {
         self.api_client
             .post(&format!("{}/subscriptions", &self.address))
@@ -35,37 +50,13 @@ impl TestApp {
             .expect("Failed to execute request.")
     }
 
-    /// Extract the confirmation link embedded in the request to the email API.
-    pub fn get_confirmation_links(&self, email_request: &wiremock::Request) -> ConfirmationLinks {
-        let body: serde_json::Value = serde_json::from_slice(&email_request.body).unwrap();
-
-        // Extract the link from one of the request fields.
-        let get_link = |s: &str| {
-            let links: Vec<_> = linkify::LinkFinder::new()
-                .links(s)
-                .filter(|l| *l.kind() == linkify::LinkKind::Url)
-                .collect();
-            assert_eq!(links.len(), 1);
-            let raw_link = links[0].as_str().to_owned();
-            let mut confirmation_link = reqwest::Url::parse(&raw_link).unwrap();
-            // Let's make sure we don't call random APIs on the web
-            assert_eq!(confirmation_link.host_str().unwrap(), "127.0.0.1");
-            confirmation_link.set_port(Some(self.port)).unwrap();
-            confirmation_link
-        };
-
-        let html = get_link(body["HtmlBody"].as_str().unwrap());
-        let plain_text = get_link(body["TextBody"].as_str().unwrap());
-        ConfirmationLinks { html, plain_text }
-    }
-
-    pub async fn post_login<Body>(&self, body: Body) -> reqwest::Response
+    pub async fn post_login<Body>(&self, body: &Body) -> reqwest::Response
     where
         Body: serde::Serialize,
     {
         self.api_client
             .post(&format!("{}/login", &self.address))
-            .form(&body)
+            .form(body)
             .send()
             .await
             .expect("Failed to execute request.")
@@ -106,6 +97,26 @@ impl TestApp {
         self.get_change_password().await.text().await.unwrap()
     }
 
+    pub async fn post_logout(&self) -> reqwest::Response {
+        self.api_client
+            .post(&format!("{}/admin/logout", &self.address))
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
+    pub async fn post_change_password<Body>(&self, body: &Body) -> reqwest::Response
+    where
+        Body: serde::Serialize,
+    {
+        self.api_client
+            .post(&format!("{}/admin/password", &self.address))
+            .form(body)
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
     pub async fn get_publish_newsletter(&self) -> reqwest::Response {
         self.api_client
             .get(&format!("{}/admin/newsletters", &self.address))
@@ -130,24 +141,28 @@ impl TestApp {
             .expect("Failed to execute request.")
     }
 
-    pub async fn post_change_password<Body>(&self, body: Body) -> reqwest::Response
-    where
-        Body: serde::Serialize,
-    {
-        self.api_client
-            .post(&format!("{}/admin/password", &self.address))
-            .form(&body)
-            .send()
-            .await
-            .expect("Failed to execute request.")
-    }
+    /// Extract the confirmation links embedded in the request to the email API.
+    pub fn get_confirmation_links(&self, email_request: &wiremock::Request) -> ConfirmationLinks {
+        let body: serde_json::Value = serde_json::from_slice(&email_request.body).unwrap();
 
-    pub async fn post_logout(&self) -> reqwest::Response {
-        self.api_client
-            .post(&format!("{}/admin/logout", &self.address))
-            .send()
-            .await
-            .expect("Failed to execute request.")
+        // Extract the link from one of the request fields.
+        let get_link = |s: &str| {
+            let links: Vec<_> = linkify::LinkFinder::new()
+                .links(s)
+                .filter(|l| *l.kind() == linkify::LinkKind::Url)
+                .collect();
+            assert_eq!(links.len(), 1);
+            let raw_link = links[0].as_str().to_owned();
+            let mut confirmation_link = reqwest::Url::parse(&raw_link).unwrap();
+            // Let's make sure we don't call random APIs on the web
+            assert_eq!(confirmation_link.host_str().unwrap(), "127.0.0.1");
+            confirmation_link.set_port(Some(self.port)).unwrap();
+            confirmation_link
+        };
+
+        let html = get_link(body["HtmlBody"].as_str().unwrap());
+        let plain_text = get_link(body["TextBody"].as_str().unwrap());
+        ConfirmationLinks { html, plain_text }
     }
 }
 
@@ -206,6 +221,7 @@ pub async fn spawn_app() -> TestApp {
         email_server,
         test_user: TestUser::generate(),
         api_client: client,
+        email_client: configuration.email_client.client(),
     };
 
     // Store the user in the database
@@ -255,12 +271,12 @@ impl TestUser {
         }
     }
 
-    pub async fn login(&self, app: &TestApp) {
+    pub async fn login(&self, app: &TestApp) -> reqwest::Response {
         app.post_login(&serde_json::json!({
             "username": &self.username,
             "password": &self.password
         }))
-        .await;
+        .await
     }
 
     async fn store(&self, pool: &PgPool) {
